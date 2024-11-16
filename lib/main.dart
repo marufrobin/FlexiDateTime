@@ -1,6 +1,8 @@
 import 'package:flexi_date_time/time_wheel.widget.dart';
 import 'package:flutter/material.dart';
 
+import 'date_picker.widget.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -49,6 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
+              DatePickerWidget(),
               TimeWheelWidget(),
             ],
           ),

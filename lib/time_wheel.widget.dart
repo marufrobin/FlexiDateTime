@@ -9,38 +9,121 @@ class TimeWheelWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Text('Date Picker Widget'),
-        CalendarDatePicker(
-          initialCalendarMode: DatePickerMode.day,
-          currentDate: DateTime.now(),
-          initialDate: DateTime.now(),
-          firstDate: DateTime.now(),
-          lastDate: DateTime(2100),
-          onDateChanged: (date) {
-            log(name: 'onDateChanged:', "$date");
-          },
-          onDisplayedMonthChanged: (value) {
-            log(name: 'onDisplayedMonthChanged:', "$value");
-          },
-          selectableDayPredicate: (day) {
-            log(name: 'selectableDayPredicate:', "$day");
-            return true;
-          },
-        ),
-        const Text('Time Wheel Widget'),
+        const Text('Testing Time Wheel Widget'),
+        _TimeWheelWidget(),
+        const Text('Testing Wheel Widget'),
         const SizedBox(height: 10),
         _ListWheelTestWidget(),
         const SizedBox(height: 10),
-        const Text(' List Wheel Child Builder Delegate Widget'),
+        const Text('Test List Wheel Child Builder Delegate Widget'),
         _ListWheelChildBuilderDelegateWidget(),
         const SizedBox(height: 10),
-        const Text('List Wheel Child Looping List Delegate'),
+        const Text('Test List Wheel Child Looping List Delegate'),
         const Text('List will show from beginning to end and then will loop'),
         _LoopingWheelWidget(),
         const SizedBox(height: 10),
       ],
     );
   }
+}
+
+/// Enum for time format
+/// for [HoursFormat24] it will show 24 hours format
+/// for [HoursFormat12] it will show 12 hours format
+enum TimeHourFormat { HoursFormat24, HoursFormat12 }
+
+class _TimeWheelWidget extends StatelessWidget {
+  const _TimeWheelWidget({
+    super.key,
+    this.timeHourFormat = TimeHourFormat.HoursFormat12,
+    this.height,
+    this.width,
+    this.itemExtent = 30,
+  });
+
+  final TimeHourFormat timeHourFormat;
+  final double? height;
+  final double? width;
+  final double itemExtent;
+
+  @override
+  Widget build(BuildContext context) {
+    final timesList = getTimeList(
+      timeHourFormat: timeHourFormat,
+      intervalMinutes: 10,
+    );
+    log(name: 'timesList', "$timesList");
+
+    return SizedBox(
+      height: height ?? 300,
+      width: width ?? 60,
+      child: ListWheelScrollView.useDelegate(
+        itemExtent: itemExtent,
+        // useMagnifier: true,
+        onSelectedItemChanged: (value) {
+          log('onSelectedItemChanged: ${value + 1}');
+        },
+
+        overAndUnderCenterOpacity: 0.6,
+        diameterRatio: 1.4,
+        useMagnifier: true,
+        magnification: 1.4,
+        squeeze: 0.9,
+        physics: const FixedExtentScrollPhysics(),
+        childDelegate: ListWheelChildLoopingListDelegate(
+          children: timesList
+                  ?.map(
+                    (time) => Container(
+                      color: Colors.grey.shade300,
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Center(
+                        child: Text(
+                          '$time',
+                          style: const TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList() ??
+              [],
+        ),
+      ),
+    );
+  }
+
+  List<String?>? getTimeList({
+    required TimeHourFormat timeHourFormat,
+    required int intervalMinutes,
+  }) {
+    final intervalPerDay = (24 * 60) ~/ intervalMinutes;
+
+    List<String?>? timeList;
+    timeList = List.generate(
+      intervalPerDay,
+      (index) {
+        final totalMinutes = index * intervalMinutes;
+        final timeHour = totalMinutes ~/ 60;
+        final timeMinute = totalMinutes % 60;
+        if (timeHourFormat == TimeHourFormat.HoursFormat24) {
+          return "${timeHour.toString().padLeft(2, '0')}:${timeMinute.toString().padLeft(2, '0')}";
+        } else if (timeHourFormat == TimeHourFormat.HoursFormat12) {
+          // Correct 12-hour format
+          final hour12 = _get12Hours(timeHour); // Convert hours
+          final period = _get12HoursString(timeHour); // Determine AM/PM
+          return "${hour12.toString().padLeft(2, '0')}:${timeMinute.toString().padLeft(2, '0')} $period";
+        } else {
+          return null;
+        }
+      },
+    );
+    return timeList;
+  }
+
+  int _get12Hours(int hour) => hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+  String _get12HoursString(int hour) => hour < 12 ? 'AM' : 'PM';
 }
 
 class _LoopingWheelWidget extends StatelessWidget {
