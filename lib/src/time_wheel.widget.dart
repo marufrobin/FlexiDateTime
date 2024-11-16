@@ -2,6 +2,8 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 
+import 'enum.dart';
+
 class TimeWheelWidget extends StatelessWidget {
   const TimeWheelWidget({super.key});
 
@@ -30,11 +32,6 @@ class TimeWheelWidget extends StatelessWidget {
     );
   }
 }
-
-/// Enum for time format
-/// for [HoursFormat24] it will show 24 hours format
-/// for [HoursFormat12] it will show 12 hours format
-enum TimeHourFormat { HoursFormat24, HoursFormat12 }
 
 class _TimeWheelWidget extends StatelessWidget {
   const _TimeWheelWidget({
@@ -86,41 +83,45 @@ class _TimeWheelWidget extends StatelessWidget {
 
     return SizedBox(
       height: height ?? 300,
-      width: width ?? 60,
+      width: width,
       child: ListWheelScrollView.useDelegate(
         itemExtent: itemExtent,
-        // useMagnifier: true,
         onSelectedItemChanged: (value) {
           log('onSelectedItemChanged: ${value + 1}');
+          log(name: 'Selected time', "${timesList?.elementAt(value)}");
         },
-
         overAndUnderCenterOpacity: 0.6,
         diameterRatio: 1.4,
         useMagnifier: true,
         magnification: 1.4,
         squeeze: 0.9,
         physics: const FixedExtentScrollPhysics(),
-        childDelegate: ListWheelChildLoopingListDelegate(
-          children: timesList
-                  ?.map(
-                    (time) => Container(
-                      color: Colors.grey.shade300,
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: Center(
-                        child: Text(
-                          '$time',
-                          style: const TextStyle(
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+        childDelegate: buildListWheelChildLoopingListDelegate(timesList),
+      ),
+    );
+  }
+
+  ListWheelChildLoopingListDelegate buildListWheelChildLoopingListDelegate(
+    List<String?>? timesList,
+  ) {
+    return ListWheelChildLoopingListDelegate(
+      children: timesList
+              ?.map(
+                (time) => Container(
+                  color: Colors.grey.shade300,
+                  child: Center(
+                    child: Text(
+                      '$time',
+                      style: const TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  )
-                  .toList() ??
-              [],
-        ),
-      ),
+                  ),
+                ),
+              )
+              .toList() ??
+          [],
     );
   }
 

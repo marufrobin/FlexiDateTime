@@ -1,7 +1,7 @@
-import 'package:flexi_date_time/time_wheel.widget.dart';
+import 'package:flexi_date_time/src/time_wheel.widget.dart';
 import 'package:flutter/material.dart';
 
-import 'date_picker.widget.dart';
+import 'src/date_picker.widget.dart';
 
 void main() {
   runApp(const MyApp());
