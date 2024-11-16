@@ -48,9 +48,11 @@ class _TimeWheelWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final timesList = getTimeList(
+    final timesList = _generateTimeIntervals(
       timeHourFormat: timeHourFormat,
       intervalMinutes: 10,
+      startTime: const TimeOfDay(hour: 8, minute: 0),
+      endTime: const TimeOfDay(hour: 14, minute: 00),
     );
     log(name: 'timesList', "$timesList");
 
@@ -92,6 +94,39 @@ class _TimeWheelWidget extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  List<String> _generateTimeIntervals({
+    required TimeOfDay startTime,
+    required TimeOfDay endTime,
+    required int intervalMinutes,
+    required TimeHourFormat timeHourFormat,
+  }) {
+    // Convert TimeOfDay to DateTime for easier calculations
+    final startDateTime = DateTime(0, 1, 1, startTime.hour, startTime.minute);
+    final endDateTime = DateTime(0, 1, 1, endTime.hour, endTime.minute);
+
+    final times = <String>[];
+
+    for (var current = startDateTime;
+        current.isBefore(endDateTime);
+        current = current.add(Duration(minutes: intervalMinutes))) {
+      final hour = current.hour;
+      final minute = current.minute.toString().padLeft(2, '0');
+
+      if (timeHourFormat == TimeHourFormat.HoursFormat24) {
+        // 24-hour format
+        times.add('${hour.toString().padLeft(2, '0')}:$minute');
+      } else {
+        // 12-hour format
+        final hour12 = _get12Hours(
+            hour); /* hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);*/
+        final period = _get12HoursString(hour); /* hour < 12 ? 'AM' : 'PM';*/
+        times.add('$hour12:$minute $period');
+      }
+    }
+
+    return times;
   }
 
   List<String?>? getTimeList({
