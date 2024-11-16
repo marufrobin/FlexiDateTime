@@ -11,8 +11,9 @@ class TimeWheelWidget extends StatelessWidget {
       children: [
         const Text('Testing Time Wheel Widget'),
         _TimeWheelWidget(
+          height: 300,
           startTime: const TimeOfDay(hour: 0, minute: 0),
-          endTime: const TimeOfDay(hour: 0, minute: 0),
+          endTime: const TimeOfDay(hour: 1, minute: 0),
         ),
         const Text('Testing Wheel Widget'),
         const SizedBox(height: 10),
@@ -39,7 +40,7 @@ class _TimeWheelWidget extends StatelessWidget {
   const _TimeWheelWidget({
     super.key,
     this.timeHourFormat = TimeHourFormat.HoursFormat12,
-    this.height,
+    required this.height,
     this.width,
     this.itemExtent = 30,
     required this.startTime,
@@ -56,24 +57,36 @@ class _TimeWheelWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Validate time inputs
-    String? errorMessage = _validateTimeInputs(startTime, endTime);
+    try {
+      _validateTimeInputs(startTime, endTime);
+    } catch (error, stackTrace) {
+      // Log the error and stack trace
+      debugPrint('Error: $error');
+      debugPrint('StackTrace: $stackTrace');
 
-    /// Return an error widget if validation fails
-    if (errorMessage != null) {
-      return ErrorWidget.withDetails(message: errorMessage);
+      // Optional: Report error with FlutterError
+      FlutterError.reportError(FlutterErrorDetails(
+        exception: error,
+        stack: stackTrace,
+        library: 'TimeWheelWidget',
+        context: ErrorDescription('Time validation failed in TimeWheelWidget'),
+      ));
+
+      // Return an ErrorWidget with the error message
+      return ErrorWidget.withDetails(message: error.toString());
     }
+
     final timesList = _generateTimeIntervals(
       timeHourFormat: timeHourFormat,
       intervalMinutes: 10,
-      startTime: const TimeOfDay(hour: 0, minute: 0),
-      endTime: const TimeOfDay(hour: 0, minute: 0),
+      startTime: startTime,
+      endTime: endTime,
     );
     log(name: 'timesList', "$timesList");
 
     return SizedBox(
       height: height ?? 300,
-      width: width,
+      width: width ?? 60,
       child: ListWheelScrollView.useDelegate(
         itemExtent: itemExtent,
         // useMagnifier: true,
@@ -174,16 +187,17 @@ class _TimeWheelWidget extends StatelessWidget {
 
   int _get12Hours(int hour) => hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
   String _get12HoursString(int hour) => hour < 12 ? 'AM' : 'PM';
-  String? _validateTimeInputs(TimeOfDay startTime, TimeOfDay endTime) {
+
+  void _validateTimeInputs(TimeOfDay startTime, TimeOfDay endTime) {
     final start = DateTime(0, 1, 1, startTime.hour, startTime.minute);
     final end = DateTime(0, 1, 1, endTime.hour, endTime.minute);
 
     if (start.isAtSameMomentAs(end)) {
-      return "Start and End Time cannot be the same. Please select different times.";
+      throw ArgumentError(
+          "Start and End Time cannot be the same. Please select different times.");
     } else if (start.isAfter(end)) {
-      return "Start Time must be earlier than End Time.";
+      throw ArgumentError("Start Time must be earlier than End Time.");
     }
-    return null; // No error
   }
 }
 
