@@ -10,7 +10,10 @@ class TimeWheelWidget extends StatelessWidget {
     return Column(
       children: [
         const Text('Testing Time Wheel Widget'),
-        _TimeWheelWidget(),
+        _TimeWheelWidget(
+          startTime: const TimeOfDay(hour: 0, minute: 0),
+          endTime: const TimeOfDay(hour: 0, minute: 0),
+        ),
         const Text('Testing Wheel Widget'),
         const SizedBox(height: 10),
         _ListWheelTestWidget(),
@@ -39,6 +42,8 @@ class _TimeWheelWidget extends StatelessWidget {
     this.height,
     this.width,
     this.itemExtent = 30,
+    required this.startTime,
+    required this.endTime,
   });
 
   final TimeHourFormat timeHourFormat;
@@ -46,19 +51,29 @@ class _TimeWheelWidget extends StatelessWidget {
   final double? width;
   final double itemExtent;
 
+  final TimeOfDay startTime;
+  final TimeOfDay endTime;
+
   @override
   Widget build(BuildContext context) {
+    // Validate time inputs
+    String? errorMessage = _validateTimeInputs(startTime, endTime);
+
+    /// Return an error widget if validation fails
+    if (errorMessage != null) {
+      return ErrorWidget.withDetails(message: errorMessage);
+    }
     final timesList = _generateTimeIntervals(
       timeHourFormat: timeHourFormat,
       intervalMinutes: 10,
-      startTime: const TimeOfDay(hour: 8, minute: 0),
-      endTime: const TimeOfDay(hour: 14, minute: 00),
+      startTime: const TimeOfDay(hour: 0, minute: 0),
+      endTime: const TimeOfDay(hour: 0, minute: 0),
     );
     log(name: 'timesList', "$timesList");
 
     return SizedBox(
       height: height ?? 300,
-      width: width ?? 60,
+      width: width,
       child: ListWheelScrollView.useDelegate(
         itemExtent: itemExtent,
         // useMagnifier: true,
@@ -96,7 +111,7 @@ class _TimeWheelWidget extends StatelessWidget {
     );
   }
 
-  List<String> _generateTimeIntervals({
+  List<String?>? _generateTimeIntervals({
     required TimeOfDay startTime,
     required TimeOfDay endTime,
     required int intervalMinutes,
@@ -106,7 +121,7 @@ class _TimeWheelWidget extends StatelessWidget {
     final startDateTime = DateTime(0, 1, 1, startTime.hour, startTime.minute);
     final endDateTime = DateTime(0, 1, 1, endTime.hour, endTime.minute);
 
-    final times = <String>[];
+    List<String?>? times = <String?>[];
 
     for (var current = startDateTime;
         current.isBefore(endDateTime);
@@ -159,6 +174,17 @@ class _TimeWheelWidget extends StatelessWidget {
 
   int _get12Hours(int hour) => hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
   String _get12HoursString(int hour) => hour < 12 ? 'AM' : 'PM';
+  String? _validateTimeInputs(TimeOfDay startTime, TimeOfDay endTime) {
+    final start = DateTime(0, 1, 1, startTime.hour, startTime.minute);
+    final end = DateTime(0, 1, 1, endTime.hour, endTime.minute);
+
+    if (start.isAtSameMomentAs(end)) {
+      return "Start and End Time cannot be the same. Please select different times.";
+    } else if (start.isAfter(end)) {
+      return "Start Time must be earlier than End Time.";
+    }
+    return null; // No error
+  }
 }
 
 class _LoopingWheelWidget extends StatelessWidget {
